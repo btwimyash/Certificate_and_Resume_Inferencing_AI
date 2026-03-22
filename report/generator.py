@@ -5,151 +5,18 @@ from datetime import datetime
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.units import mm
-from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT
 from reportlab.platypus import (
-    SimpleDocTemplate, Paragraph, Spacer, Table,
-    TableStyle, HRFlowable
+    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 )
-from reportlab.graphics.shapes import Drawing, Rect
-from reportlab.graphics import renderPDF
 from reportlab.platypus import Flowable
 
-
-# ── Colors ─────────────────────────────────────────────────
-NAVY         = colors.HexColor("#0D1B2A")
-SLATE        = colors.HexColor("#1E3A5F")
-ACCENT       = colors.HexColor("#2563EB")
-ACCENT_LIGHT = colors.HexColor("#DBEAFE")
-GREEN        = colors.HexColor("#16A34A")
-GREEN_LIGHT  = colors.HexColor("#DCFCE7")
-AMBER        = colors.HexColor("#B45309")
-AMBER_LIGHT  = colors.HexColor("#FEF3C7")
-GRAY_50      = colors.HexColor("#F9FAFB")
-GRAY_100     = colors.HexColor("#F3F4F6")
-GRAY_200     = colors.HexColor("#E5E7EB")
-GRAY_400     = colors.HexColor("#9CA3AF")
-GRAY_600     = colors.HexColor("#4B5563")
-GRAY_700     = colors.HexColor("#374151")
-GRAY_900     = colors.HexColor("#111827")
-WHITE        = colors.white
-
-
-# ── Confidence Bar Flowable ─────────────────────────────────
-class ConfidenceBar(Flowable):
-    def __init__(self, confidence, skill_type, width=100, height=8):
-        super().__init__()
-        self.confidence  = confidence
-        self.skill_type  = skill_type
-        self.bar_width   = width
-        self.bar_height  = height
-        self.width       = width
-        self.height      = height
-
-    def draw(self):
-        bar_color = GREEN if self.skill_type == "explicit" else ACCENT
-        filled    = int(self.confidence * self.bar_width)
-
-        # Background track
-        self.canv.setFillColor(GRAY_200)
-        self.canv.roundRect(0, 0, self.bar_width, self.bar_height, 3, fill=1, stroke=0)
-
-        # Filled portion
-        if filled > 0:
-            self.canv.setFillColor(bar_color)
-            self.canv.roundRect(0, 0, filled, self.bar_height, 3, fill=1, stroke=0)
-
-
-# ── Style Definitions ───────────────────────────────────────
-def _make_style(name, **kwargs):
-    return ParagraphStyle(name, **kwargs)
-
-
-S = {
-    "h1": _make_style("h1",
-        fontName="Helvetica-Bold", fontSize=20,
-        textColor=WHITE, leading=26, alignment=TA_LEFT),
-
-    "h1_sub": _make_style("h1_sub",
-        fontName="Helvetica", fontSize=9,
-        textColor=colors.HexColor("#93C5FD"), leading=14),
-
-    "section": _make_style("section",
-        fontName="Helvetica-Bold", fontSize=11,
-        textColor=NAVY, leading=16, spaceBefore=4),
-
-    "label": _make_style("label",
-        fontName="Helvetica-Bold", fontSize=7,
-        textColor=GRAY_400, leading=10, spaceAfter=3),
-
-    "value": _make_style("value",
-        fontName="Helvetica", fontSize=10,
-        textColor=GRAY_700, leading=14),
-
-    "stat_n": _make_style("stat_n",
-        fontName="Helvetica-Bold", fontSize=26,
-        textColor=NAVY, leading=30, alignment=TA_CENTER),
-
-    "stat_n_accent": _make_style("stat_n_accent",
-        fontName="Helvetica-Bold", fontSize=26,
-        textColor=ACCENT, leading=30, alignment=TA_CENTER),
-
-    "stat_n_green": _make_style("stat_n_green",
-        fontName="Helvetica-Bold", fontSize=26,
-        textColor=GREEN, leading=30, alignment=TA_CENTER),
-
-    "stat_n_amber": _make_style("stat_n_amber",
-        fontName="Helvetica-Bold", fontSize=26,
-        textColor=AMBER, leading=30, alignment=TA_CENTER),
-
-    "stat_l": _make_style("stat_l",
-        fontName="Helvetica", fontSize=8,
-        textColor=GRAY_400, leading=11, alignment=TA_CENTER),
-
-    "rank": _make_style("rank",
-        fontName="Helvetica-Bold", fontSize=10,
-        textColor=GRAY_400, alignment=TA_CENTER, leading=14),
-
-    "skill_name": _make_style("skill_name",
-        fontName="Helvetica-Bold", fontSize=10,
-        textColor=GRAY_900, leading=14),
-
-    "skill_reason": _make_style("skill_reason",
-        fontName="Helvetica-Oblique", fontSize=8,
-        textColor=GRAY_400, leading=11),
-
-    "badge_ex": _make_style("badge_ex",
-        fontName="Helvetica-Bold", fontSize=7,
-        textColor=GREEN, alignment=TA_CENTER, leading=10),
-
-    "badge_im": _make_style("badge_im",
-        fontName="Helvetica-Bold", fontSize=7,
-        textColor=AMBER, alignment=TA_CENTER, leading=10),
-
-    "pct_ex": _make_style("pct_ex",
-        fontName="Helvetica-Bold", fontSize=10,
-        textColor=GREEN, alignment=TA_RIGHT, leading=14),
-
-    "pct_im": _make_style("pct_im",
-        fontName="Helvetica-Bold", fontSize=10,
-        textColor=ACCENT, alignment=TA_RIGHT, leading=14),
-
-    "breakdown_skill": _make_style("breakdown_skill",
-        fontName="Helvetica", fontSize=9,
-        textColor=GRAY_700, leading=14),
-
-    "breakdown_pct_ex": _make_style("breakdown_pct_ex",
-        fontName="Helvetica-Bold", fontSize=9,
-        textColor=GREEN, alignment=TA_RIGHT, leading=14),
-
-    "breakdown_pct_im": _make_style("breakdown_pct_im",
-        fontName="Helvetica-Bold", fontSize=9,
-        textColor=ACCENT, alignment=TA_RIGHT, leading=14),
-
-    "footer": _make_style("footer",
-        fontName="Helvetica", fontSize=8,
-        textColor=GRAY_400, alignment=TA_CENTER),
-}
+from report.styles import (
+    NAVY, SLATE, ACCENT, ACCENT_LIGHT, GREEN, GREEN_LIGHT,
+    AMBER, AMBER_LIGHT, GRAY_50, GRAY_100, GRAY_200, GRAY_400,
+    GRAY_600, GRAY_700, GRAY_900, WHITE,
+    S, _make_style, ConfidenceBar, build_footer
+)
 
 
 # ── Header ──────────────────────────────────────────────────
@@ -262,7 +129,6 @@ def _build_stats(skills, W):
 
 # ── Skills Table ────────────────────────────────────────────
 def _build_skills_table(skills, W):
-    # Column widths: rank, skill+reason, badge, bar, pct
     cw = [24, 180, 58, 90, 32]
 
     th_style = _make_style("th",
@@ -306,10 +172,8 @@ def _build_skills_table(skills, W):
 
         ts.append(("BACKGROUND", (0, i), (-1, i), row_bg))
 
-        # Rank
         rank = Paragraph(str(i), S["rank"])
 
-        # Skill name + reason stacked
         skill_inner = Table([
             [Paragraph(name,   S["skill_name"])],
             [Paragraph(reason, S["skill_reason"])],
@@ -321,7 +185,6 @@ def _build_skills_table(skills, W):
             ("RIGHTPADDING",  (0,0), (-1,-1), 0),
         ]))
 
-        # Badge
         badge_text  = "EXPLICIT" if is_ex else "IMPLICIT"
         badge_style = S["badge_ex"] if is_ex else S["badge_im"]
         badge_bg    = GREEN_LIGHT  if is_ex else AMBER_LIGHT
@@ -340,10 +203,9 @@ def _build_skills_table(skills, W):
             ("RIGHTPADDING",  (0,0), (-1,-1), 4),
         ]))
 
-        # Confidence bar
-        bar = ConfidenceBar(conf, stype, width=cw[3] - 12, height=7)
+        bar_color = GREEN if is_ex else ACCENT
+        bar = ConfidenceBar(conf, bar_color, width=cw[3] - 12, height=7)
 
-        # Percentage
         pct_s = S["pct_ex"] if is_ex else S["pct_im"]
         pct   = Paragraph(f"{conf:.0%}", pct_s)
 
@@ -436,19 +298,6 @@ def _build_breakdown(skills, W):
             Spacer(1, 6), grid, Spacer(1, 16)]
 
 
-# ── Footer ──────────────────────────────────────────────────
-def _build_footer(canvas, doc):
-    canvas.saveState()
-    canvas.setFont("Helvetica", 8)
-    canvas.setFillColor(GRAY_400)
-    canvas.drawCentredString(
-        A4[0] / 2,
-        14 * mm,
-        f"Generated by CertLens  ·  Confidential  ·  Page {doc.page}"
-    )
-    canvas.restoreState()
-
-
 # ── Main Entry Point ────────────────────────────────────────
 def generate_report(result: dict, output_path: str) -> str:
     cert   = result.get("certificate", {})
@@ -474,5 +323,5 @@ def generate_report(result: dict, output_path: str) -> str:
     story += _build_skills_table(skills, usable)
     story += _build_breakdown(skills, usable)
 
-    doc.build(story, onFirstPage=_build_footer, onLaterPages=_build_footer)
+    doc.build(story, onFirstPage=build_footer, onLaterPages=build_footer)
     return os.path.abspath(output_path)

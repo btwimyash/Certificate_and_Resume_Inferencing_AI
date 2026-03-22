@@ -4,7 +4,7 @@ import os
 import json
 import google.generativeai as genai
 from dotenv import load_dotenv
-from inference.prompt import SKILL_INFERENCE_PROMPT
+from inference.prompt import SKILL_INFERENCE_PROMPT, RESUME_INFERENCE_PROMPT
 
 load_dotenv()
 
@@ -78,6 +78,31 @@ def infer_skills(certificate_data: dict) -> dict:
         generation_config=genai.GenerationConfig(
             temperature=0.3,
             max_output_tokens=8192
+        )
+    )
+
+    raw_text = response.text
+    result   = _parse_response(raw_text)
+
+    return result
+
+
+def infer_resume_skills(resume_pages: list) -> dict:
+    _configure_gemini()
+
+    model = genai.GenerativeModel(model_name="gemini-2.5-flash")
+
+    # Send all page images followed by the prompt
+    message = [
+        {"mime_type": page["mime_type"], "data": page["data"]}
+        for page in resume_pages
+    ] + [RESUME_INFERENCE_PROMPT]
+
+    response = model.generate_content(
+        message,
+        generation_config=genai.GenerationConfig(
+            temperature=0.3,
+            max_output_tokens=16384
         )
     )
 

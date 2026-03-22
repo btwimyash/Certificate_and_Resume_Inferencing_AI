@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \"import google.generativeai; import fitz; from PIL import Image; from reportlab.lib.pagesizes import A4; from dotenv import load_dotenv; print\\(''All imports OK''\\)\")",
+      "Bash(pip install:*)",
+      "Bash(pip show:*)",
+      "Bash(python -m pip install pymupdf==1.25.3 Pillow==11.1.0 python-dotenv==1.0.1 reportlab==4.2.5)",
+      "Bash(python -c \":*)",
+      "Bash(python main.py --help)",
+      "Bash(streamlit run:*)"
+    ]
+  }
+}
